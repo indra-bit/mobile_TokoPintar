@@ -20,16 +20,26 @@ class AuthProvider with ChangeNotifier {
     _setLoading(false);
   }
 
+  String? _lastErrorMessage;
+  String? get lastErrorMessage => _lastErrorMessage;
+
   Future<bool> login(String email, String password) async {
     _setLoading(true);
+    _lastErrorMessage = null;
     try {
       await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
+        email: email.trim(),
+        password: password.trim(),
       );
       _setLoading(false);
       return true;
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      _lastErrorMessage = e.message;
+      debugPrint('Login gagal: ${e.message}');
+      _setLoading(false);
+      return false;
     } catch (e) {
+      _lastErrorMessage = e.toString();
       debugPrint('Login gagal: $e');
       _setLoading(false);
       return false;

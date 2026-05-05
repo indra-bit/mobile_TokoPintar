@@ -30,8 +30,9 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (!success && mounted) {
+        final errorMsg = auth.lastErrorMessage ?? 'Periksa kembali email dan password Anda.';
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login gagal. Periksa email dan password Anda.')),
+          SnackBar(content: Text('Login gagal: $errorMsg')),
         );
       }
     }
