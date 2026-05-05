@@ -70,5 +70,5 @@ Sistem bekerja dengan alur logika berikut:
 
 ---
 
-**Dikembangkan oleh:** [Indra & Salman /Indra-Bit]  
+**Dikembangkan oleh:** [Indra/Indra-Bit]  
 *Untuk kebutuhan penyusunan laporan dan pengelolaan gudang.*
