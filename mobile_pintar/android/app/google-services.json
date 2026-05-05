@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "165962374711",
+    "project_id": "toko-pintar-mobile",
+    "storage_bucket": "toko-pintar-mobile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:165962374711:android:81bb88f894e95eadd4a9b2",
+        "android_client_info": {
+          "package_name": "com.example.mobile_pintar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVdtm09cMHLsXCNGjFIteXxwWsf-8VMgg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

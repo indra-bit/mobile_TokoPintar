@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart' show User;
 import '../providers/auth_provider.dart';
-import '../models/user.dart';
 import 'pos_screen.dart';
+import 'produk_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -27,7 +28,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final List<Widget> pages = [
       _buildHomeContent(),
       const PosScreen(),
-      Center(child: Text("Halaman Produk (Coming Soon)", style: TextStyle(fontSize: 18))),
+      const ProdukScreen(),
       _buildProfileContent(user),
     ];
 
@@ -149,7 +150,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          user?.name ?? 'Pengguna',
+          user?.displayName ?? 'Pengguna',
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
