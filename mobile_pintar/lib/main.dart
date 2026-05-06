@@ -30,9 +30,16 @@ class MobilePintarApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Mobile Pintar',
+      title: 'Smart Mart',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        scaffoldBackgroundColor: const Color(0xFFF5F7FA),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4A90E2)),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF4A90E2),
+          foregroundColor: Colors.white,
+          centerTitle: true,
+          elevation: 2,
+        ),
         useMaterial3: true,
       ),
       home: const AuthWrapper(),

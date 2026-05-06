@@ -28,7 +28,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final user = context.watch<AuthProvider>().user;
 
     final List<Widget> pages = [
-      _buildHomeContent(),
+      _buildHomeContent(user),
       const PosScreen(),
       const ProdukScreen(),
       _buildProfileContent(user),
@@ -36,12 +36,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mobile Pintar'),
+        title: const Text('Smart Mart', style: TextStyle(fontWeight: FontWeight.bold)),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF4A90E2), Color(0xFF87CEEB)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications),
             onPressed: () {
-              // Show alerts
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Tidak ada notifikasi baru')),
               );
@@ -49,7 +57,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           )
         ],
       ),
-      body: pages[_selectedIndex],
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFF5F7FA), Color(0xFFC3CFE2)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: pages[_selectedIndex],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
@@ -85,14 +102,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildHomeContent() {
+  Widget _buildHomeContent(User? user) {
     final now = DateTime.now();
     final startOfDay = DateTime(now.year, now.month, now.day);
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // Alert Selamat Datang bergaya Bootstrap Alert-Primary
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFCFE2FF),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFFB6D4FE)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.info_outline, color: Color(0xFF052C65)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Selamat datang, ${user?.displayName ?? user?.email?.split('@')[0] ?? 'Pengguna'}',
+                  style: const TextStyle(color: Color(0xFF052C65), fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
         Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
