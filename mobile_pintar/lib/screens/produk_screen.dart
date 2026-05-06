@@ -156,7 +156,6 @@ class ProdukScreen extends StatelessWidget {
             children: [
               Icon(Icons.add_box, color: Color(0xFF4A90E2)),
               SizedBox(width: 8),
-              Text('Tambah Produk'),
             ],
           ),
           content: SingleChildScrollView(
