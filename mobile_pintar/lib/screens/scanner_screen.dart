@@ -11,7 +11,17 @@ class ScannerScreen extends StatefulWidget {
 }
 
 class _ScannerScreenState extends State<ScannerScreen> {
-  MobileScannerController cameraController = MobileScannerController();
+  MobileScannerController cameraController = MobileScannerController(
+    formats: const [
+      BarcodeFormat.ean13,
+      BarcodeFormat.ean8,
+      BarcodeFormat.upcA,
+      BarcodeFormat.upcE,
+      BarcodeFormat.code128,
+      BarcodeFormat.code39,
+      BarcodeFormat.code93,
+    ],
+  );
   bool _isProcessing = false;
 
   @override
@@ -62,23 +72,22 @@ class _ScannerScreenState extends State<ScannerScreen> {
             const Center(
               child: CircularProgressIndicator(),
             ),
-          QRScannerOverlay(overlayColour: Colors.black.withValues(alpha: 0.5)),
+          BarcodeScannerOverlay(overlayColour: Colors.black.withValues(alpha: 0.5)),
         ],
       ),
     );
   }
 }
 
-class QRScannerOverlay extends StatelessWidget {
-  const QRScannerOverlay({super.key, required this.overlayColour});
+class BarcodeScannerOverlay extends StatelessWidget {
+  const BarcodeScannerOverlay({super.key, required this.overlayColour});
   final Color overlayColour;
 
   @override
   Widget build(BuildContext context) {
-    double scanArea = (MediaQuery.of(context).size.width < 400 ||
-            MediaQuery.of(context).size.height < 400)
-        ? 200.0
-        : 330.0;
+    double scanAreaWidth = MediaQuery.of(context).size.width * 0.8;
+    double scanAreaHeight = 150.0; // Kotak memanjang untuk barcode
+
     return Stack(
       children: [
         ColorFiltered(
@@ -92,8 +101,8 @@ class QRScannerOverlay extends StatelessWidget {
                 child: Align(
                   alignment: Alignment.center,
                   child: Container(
-                    width: scanArea,
-                    height: scanArea,
+                    width: scanAreaWidth,
+                    height: scanAreaHeight,
                     decoration: BoxDecoration(
                       color: Colors.black,
                       borderRadius: BorderRadius.circular(10),
@@ -109,8 +118,8 @@ class QRScannerOverlay extends StatelessWidget {
           child: CustomPaint(
             foregroundPainter: BorderPainter(),
             child: SizedBox(
-              width: scanArea + 25,
-              height: scanArea + 25,
+              width: scanAreaWidth + 25,
+              height: scanAreaHeight + 25,
             ),
           ),
         ),

@@ -12,8 +12,36 @@ class PosScreen extends StatefulWidget {
 }
 
 class _PosScreenState extends State<PosScreen> {
+  final TextEditingController _manualInputController = TextEditingController();
+
   String formatCurrency(double amount) {
     return NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(amount);
+  }
+
+  Future<void> _processManualInput(CartProvider cart) async {
+    final kode = _manualInputController.text.trim();
+    if (kode.isEmpty) return;
+
+    final product = await cart.scanBarcode(kode);
+    if (!mounted) return;
+
+    if (product != null) {
+      cart.addItem(product);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${product.namaBarang} ditambahkan ke keranjang')),
+      );
+      _manualInputController.clear();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Produk tidak ditemukan')),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _manualInputController.dispose();
+    super.dispose();
   }
 
   @override
@@ -22,6 +50,39 @@ class _PosScreenState extends State<PosScreen> {
 
     return Column(
       children: [
+        // Opsi Input Manual
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _manualInputController,
+                  decoration: InputDecoration(
+                    hintText: 'Input kode barcode manual',
+                    prefixIcon: const Icon(Icons.dialpad),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onSubmitted: (_) => _processManualInput(cart),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: cart.isLoading ? null : () => _processManualInput(cart),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.all(16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: cart.isLoading
+                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Icon(Icons.add),
+              ),
+            ],
+          ),
+        ),
         Expanded(
           child: cart.items.isEmpty
               ? const Center(
