@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'scanner_screen.dart';
 
 class ProdukScreen extends StatelessWidget {
   const ProdukScreen({super.key});
@@ -169,6 +170,20 @@ class ProdukScreen extends StatelessWidget {
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                     filled: true,
                     fillColor: Colors.grey[50],
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.qr_code_scanner, color: Color(0xFF4A90E2)),
+                      onPressed: () async {
+                        final scannedCode = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ScannerScreen(returnBarcode: true),
+                          ),
+                        );
+                        if (scannedCode != null && scannedCode is String) {
+                          kodeController.text = scannedCode;
+                        }
+                      },
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),

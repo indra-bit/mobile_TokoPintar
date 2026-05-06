@@ -4,7 +4,8 @@ import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
 
 class ScannerScreen extends StatefulWidget {
-  const ScannerScreen({super.key});
+  final bool returnBarcode;
+  const ScannerScreen({super.key, this.returnBarcode = false});
 
   @override
   State<ScannerScreen> createState() => _ScannerScreenState();
@@ -42,6 +43,11 @@ class _ScannerScreenState extends State<ScannerScreen> {
                 final barcodeVal = barcodes.first.rawValue;
                 if (barcodeVal != null) {
                   setState(() => _isProcessing = true);
+
+                  if (widget.returnBarcode) {
+                    Navigator.of(context).pop(barcodeVal);
+                    return;
+                  }
 
                   final cartProvider = context.read<CartProvider>();
                   final scaffoldMessenger = ScaffoldMessenger.of(context);

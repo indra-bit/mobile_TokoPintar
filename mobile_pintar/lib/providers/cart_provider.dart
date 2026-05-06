@@ -18,21 +18,53 @@ class CartProvider with ChangeNotifier {
     return _items.fold(0, (acc, item) => acc + item.quantity);
   }
 
-  Future<Product?> scanBarcode(String kode) async {
+  Future<Product?> scanBarcode(String query) async {
     _setLoading(true);
     try {
-      final snapshot = await _firestore
+      // 1. Coba cari persis berdasarkan kode terlebih dahulu
+      final snippetCode = await _firestore
           .collection('barangs')
-          .where('kode', isEqualTo: kode)
+          .where('kode', isEqualTo: query)
           .limit(1)
           .get();
 
-      if (snapshot.docs.isNotEmpty) {
-        final doc = snapshot.docs.first;
-        final product = Product.fromFirestore(doc.id, doc.data());
+      if (snippetCode.docs.isNotEmpty) {
+        final doc = snippetCode.docs.first;
         _setLoading(false);
-        return product;
+        return Product.fromFirestore(doc.id, doc.data());
       }
+
+      // 2. Jika tidak ketemu, cari berdasarkan nama persis (case-sensitive)
+      final snippetName = await _firestore
+          .collection('barangs')
+          .where('nama', isEqualTo: query)
+          .limit(1)
+          .get();
+
+      if (snippetName.docs.isNotEmpty) {
+        final doc = snippetName.docs.first;
+        _setLoading(false);
+        return Product.fromFirestore(doc.id, doc.data());
+      }
+
+      // 3. Fallback: ambil semua dan cari parsial di memori
+      // (Beresiko lemot kalau data sangat besar,
+      // tapi untuk POS mobile toko kecil, ini metode termudah di Firestore)
+      final allDocs = await _firestore.collection('barangs').get();
+      final lowerQuery = query.toLowerCase();
+
+      final partialMatches = allDocs.docs.where((doc) {
+        final data = doc.data();
+        final nama = (data['nama']?.toString() ?? '').toLowerCase();
+        return nama.contains(lowerQuery);
+      }).toList();
+
+      if (partialMatches.isNotEmpty) {
+        final doc = partialMatches.first;
+        _setLoading(false);
+        return Product.fromFirestore(doc.id, doc.data());
+      }
+
     } catch (e) {
       debugPrint('Error fetch barcode: $e');
     }

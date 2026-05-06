@@ -59,8 +59,8 @@ class _PosScreenState extends State<PosScreen> {
                 child: TextField(
                   controller: _manualInputController,
                   decoration: InputDecoration(
-                    hintText: 'Input kode barcode manual',
-                    prefixIcon: const Icon(Icons.dialpad),
+                    hintText: 'Input kode atau nama barang',
+                    prefixIcon: const Icon(Icons.search),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
