@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' show User;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import '../providers/auth_provider.dart';
 import 'pos_screen.dart';
 import 'produk_screen.dart';
@@ -84,6 +86,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildHomeContent() {
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -98,12 +103,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildSummaryItem('Penjualan', '0', Icons.shopping_cart, Colors.green),
-                    _buildSummaryItem('Pendapatan', 'Rp 0', Icons.attach_money, Colors.blue),
-                  ],
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('penjualans')
+                      .where('created_at', isGreaterThanOrEqualTo: startOfDay)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    int totalPenjualan = 0;
+                    double totalPendapatan = 0.0;
+
+                    if (snapshot.hasData) {
+                      totalPenjualan = snapshot.data!.docs.length;
+                      for (var doc in snapshot.data!.docs) {
+                        final data = doc.data() as Map<String, dynamic>;
+                        final amount = data['total_amount'] ?? 0;
+                        totalPendapatan += (amount is num) ? amount.toDouble() : double.tryParse(amount.toString()) ?? 0.0;
+                      }
+                    }
+
+                    final String formatPendapatan = NumberFormat.currency(
+                      locale: 'id_ID',
+                      symbol: 'Rp ',
+                      decimalDigits: 0,
+                    ).format(totalPendapatan);
+
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildSummaryItem(
+                          'Penjualan',
+                          totalPenjualan.toString(),
+                          Icons.shopping_cart,
+                          Colors.green
+                        ),
+                        _buildSummaryItem(
+                          'Pendapatan',
+                          formatPendapatan,
+                          Icons.attach_money,
+                          Colors.blue
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
