@@ -1,5 +1,5 @@
 class Product {
-  final int id;
+  final String id;
   final String kodeBarang;
   final String namaBarang;
   final int stok;
@@ -13,13 +13,13 @@ class Product {
     required this.harga,
   });
 
-  factory Product.fromJson(Map<String, dynamic> json) {
+  factory Product.fromFirestore(String docId, Map<String, dynamic> data) {
     return Product(
-      id: json['id'],
-      kodeBarang: json['kode_barang'],
-      namaBarang: json['nama_barang'],
-      stok: json['stok'],
-      harga: double.parse(json['harga'].toString()),
+      id: docId,
+      kodeBarang: data['kode']?.toString() ?? '',
+      namaBarang: data['nama']?.toString() ?? 'Tanpa Nama',
+      stok: int.tryParse(data['stok']?.toString() ?? '0') ?? 0,
+      harga: double.tryParse(data['harga']?.toString() ?? '0') ?? 0.0,
     );
   }
 }

@@ -1,10 +1,9 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/product.dart';
-import '../services/api_service.dart';
 
 class CartProvider with ChangeNotifier {
-  final ApiService _apiService = ApiService();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final List<CartItem> _items = [];
   bool _isLoading = false;
 
@@ -12,25 +11,30 @@ class CartProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
 
   double get totalAmount {
-    return _items.fold(0, (sum, item) => sum + item.total);
+    return _items.fold(0.0, (acc, item) => acc + item.total);
   }
 
   int get totalItems {
-    return _items.fold(0, (sum, item) => sum + item.quantity);
+    return _items.fold(0, (acc, item) => acc + item.quantity);
   }
 
   Future<Product?> scanBarcode(String kode) async {
     _setLoading(true);
     try {
-      final response = await _apiService.get('/barangs/search/$kode');
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final product = Product.fromJson(data);
+      final snapshot = await _firestore
+          .collection('barangs')
+          .where('kode', isEqualTo: kode)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        final doc = snapshot.docs.first;
+        final product = Product.fromFirestore(doc.id, doc.data());
         _setLoading(false);
         return product;
       }
     } catch (e) {
-      // Error fetching
+      debugPrint('Error fetch barcode: $e');
     }
     _setLoading(false);
     return null;
@@ -50,12 +54,12 @@ class CartProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void removeItem(int productId) {
+  void removeItem(String productId) {
     _items.removeWhere((item) => item.product.id == productId);
     notifyListeners();
   }
 
-  void updateQuantity(int productId, int quantity) {
+  void updateQuantity(String productId, int quantity) {
     final index = _items.indexWhere((item) => item.product.id == productId);
     if (index >= 0) {
       if (quantity <= 0) {
@@ -76,23 +80,39 @@ class CartProvider with ChangeNotifier {
     if (_items.isEmpty) return false;
     _setLoading(true);
 
-    final payload = {
-      'items': _items.map((item) => {
-        'barang_id': item.product.id,
-        'jumlah': item.quantity,
-        'harga': item.product.harga,
-      }).toList(),
-    };
-
     try {
-      final response = await _apiService.post('/penjualans', payload);
-      if (response.statusCode == 201) {
-        clearCart();
-        _setLoading(false);
-        return true;
+      // Create a batch to update stock and create sales record
+      final batch = _firestore.batch();
+
+      final docRef = _firestore.collection('penjualans').doc();
+      batch.set(docRef, {
+        'total_amount': totalAmount,
+        'items_count': totalItems,
+        'created_at': FieldValue.serverTimestamp(),
+        'items': _items.map((item) => {
+          'barang_id': item.product.id,
+          'nama': item.product.namaBarang,
+          'jumlah': item.quantity,
+          'harga': item.product.harga,
+          'subtotal': item.total,
+        }).toList(),
+      });
+
+      // Update stok in barangs
+      for (var item in _items) {
+        final barangRef = _firestore.collection('barangs').doc(item.product.id);
+        batch.update(barangRef, {
+          'stok': FieldValue.increment(-item.quantity)
+        });
       }
+
+      await batch.commit();
+
+      clearCart();
+      _setLoading(false);
+      return true;
     } catch (e) {
-      // Error during checkout
+      debugPrint('Checkout error: $e');
     }
 
     _setLoading(false);
