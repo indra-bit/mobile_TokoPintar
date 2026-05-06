@@ -193,20 +193,88 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        const Text(
-          'Peringatan Stok',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        Card(
-          child: ListTile(
-            leading: const Icon(Icons.warning, color: Colors.orange),
-            title: const Text('Lihat barang yang tipis stoknya'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              // TODO: Navigate to alerts screen
-            },
-          ),
+
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('barangs')
+              .where('stok', isLessThanOrEqualTo: 10)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return const SizedBox.shrink(); // Sembunyikan jika tidak ada stok tipis
+            }
+
+            final items = snapshot.data!.docs;
+
+            return Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF3CD), // Bootstrap alert-warning
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFFFECB5)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.warning_amber_rounded, color: Color(0xFF664D03)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Peringatan Stok Rendah (${items.length} barang)',
+                          style: const TextStyle(
+                            color: Color(0xFF664D03),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const Divider(color: Color(0xFFFFECB5), height: 1),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: items.length > 3 ? 150 : (items.length * 40.0),
+                    child: ListView.builder(
+                      itemCount: items.length,
+                      itemBuilder: (context, index) {
+                        final data = items[index].data() as Map<String, dynamic>;
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  data['nama'] ?? 'Tanpa Nama',
+                                  style: const TextStyle(color: Color(0xFF664D03)),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'Sisa: ${data['stok']}',
+                                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ],
     );
@@ -224,38 +292,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildProfileContent(User? user) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        const CircleAvatar(
-          radius: 50,
-          child: Icon(Icons.person, size: 50),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          user?.displayName ?? 'Pengguna',
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          user?.email ?? 'email@example.com',
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.grey),
-        ),
-        const SizedBox(height: 32),
-        ElevatedButton.icon(
-          icon: const Icon(Icons.logout, color: Colors.white),
-          label: const Text('Logout', style: TextStyle(color: Colors.white)),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red,
-            padding: const EdgeInsets.symmetric(vertical: 12),
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF4A90E2), Color(0xFF87CEEB)],
+                    ),
+                  ),
+                  child: const CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.person, size: 50, color: Color(0xFF4A90E2)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  user?.displayName ?? user?.email?.split('@')[0] ?? 'Pengelola',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF333333)),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  user?.email ?? 'email@example.com',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey, fontSize: 16),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.logout, color: Colors.white),
+                    label: const Text('Logout', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    onPressed: () {
+                      context.read<AuthProvider>().logout();
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
-          onPressed: () {
-            context.read<AuthProvider>().logout();
-          },
         ),
-      ],
+      ),
     );
   }
 }
